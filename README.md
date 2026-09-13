@@ -7,9 +7,10 @@ US states map.
 ## Features
 
 - Interactive world map (241 countries/territories) and US map (50 states + DC)
-- Click a region on the map, or an item in the search list, to toggle it visited
+- Click a region on the map, or an item in the search list, to cycle it through
+  **not yet → visited (green) → planned (orange) → not yet**
 - The country list is grouped by continent and the state list by US Census region, each with a live visited-count badge
-- Live stats: count and percentage of places visited
+- Live stats: counts for visited and planned, plus percentage of the world/US visited
 - Search box to quickly find and toggle a place (narrows within each group)
 - Data is saved automatically in your browser (`localStorage`)
 - Export your data to a JSON file for backup, or to move it to another browser/device

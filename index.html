@@ -23,10 +23,15 @@
       <div class="stats-bar">
         <div class="stat">
           <span class="stat-value" id="world-count">0 / 0</span>
-          <span class="stat-label">places visited</span>
+          <span class="stat-label">visited</span>
+        </div>
+        <div class="stat stat-planned">
+          <span class="stat-value" id="world-planned-count">0</span>
+          <span class="stat-label">planned</span>
         </div>
         <div class="progress">
-          <div class="progress-fill" id="world-progress"></div>
+          <div class="progress-fill visited-fill" id="world-progress"></div>
+          <div class="progress-fill planned-fill" id="world-progress-planned"></div>
         </div>
         <span class="stat-pct" id="world-pct">0%</span>
       </div>
@@ -34,7 +39,12 @@
       <div class="map-layout">
         <div class="map-wrap">
           <svg id="world-map" viewBox="0 0 960 500" preserveAspectRatio="xMidYMid meet" aria-label="World map"></svg>
-          <p class="map-hint">Click a country to toggle it as visited.</p>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-swatch visited"></span>Visited</span>
+            <span class="legend-item"><span class="legend-swatch planned"></span>Planned</span>
+            <span class="legend-item"><span class="legend-swatch"></span>Not yet</span>
+          </div>
+          <p class="map-hint">Click a country to cycle: not yet → visited → planned.</p>
         </div>
         <aside class="sidebar">
           <input type="search" id="world-search" placeholder="Search countries…" aria-label="Search countries">
@@ -47,10 +57,15 @@
       <div class="stats-bar">
         <div class="stat">
           <span class="stat-value" id="usa-count">0 / 0</span>
-          <span class="stat-label">states visited</span>
+          <span class="stat-label">visited</span>
+        </div>
+        <div class="stat stat-planned">
+          <span class="stat-value" id="usa-planned-count">0</span>
+          <span class="stat-label">planned</span>
         </div>
         <div class="progress">
-          <div class="progress-fill" id="usa-progress"></div>
+          <div class="progress-fill visited-fill" id="usa-progress"></div>
+          <div class="progress-fill planned-fill" id="usa-progress-planned"></div>
         </div>
         <span class="stat-pct" id="usa-pct">0%</span>
       </div>
@@ -58,7 +73,12 @@
       <div class="map-layout">
         <div class="map-wrap">
           <svg id="usa-map" viewBox="0 0 960 600" preserveAspectRatio="xMidYMid meet" aria-label="Map of United States"></svg>
-          <p class="map-hint">Click a state to toggle it as visited.</p>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-swatch visited"></span>Visited</span>
+            <span class="legend-item"><span class="legend-swatch planned"></span>Planned</span>
+            <span class="legend-item"><span class="legend-swatch"></span>Not yet</span>
+          </div>
+          <p class="map-hint">Click a state to cycle: not yet → visited → planned.</p>
         </div>
         <aside class="sidebar">
           <input type="search" id="usa-search" placeholder="Search states…" aria-label="Search states">

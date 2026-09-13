@@ -136,8 +136,9 @@ body {
   flex-wrap: wrap;
   box-shadow: var(--shadow-sm);
 }
-.stat { display: flex; flex-direction: column; min-width: 140px; }
+.stat { display: flex; flex-direction: column; min-width: 100px; }
 .stat-value { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.01em; }
+.stat-planned .stat-value { color: var(--accent-2); }
 .stat-label { color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
 .progress {
   flex: 1;
@@ -146,13 +147,25 @@ body {
   background: var(--unvisited);
   border-radius: 999px;
   overflow: hidden;
+  display: flex;
 }
 .progress-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  border-radius: 999px;
+  flex-shrink: 0;
   transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.progress-fill.visited-fill {
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+}
+.progress-fill.planned-fill {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--accent-2),
+    var(--accent-2) 6px,
+    color-mix(in srgb, var(--accent-2) 75%, white) 6px,
+    color-mix(in srgb, var(--accent-2) 75%, white) 12px
+  );
 }
 .stat-pct {
   font-weight: 800;
@@ -201,6 +214,33 @@ path.region {
 path.region:hover { fill: var(--unvisited-hover); }
 path.region.visited { fill: var(--visited); }
 path.region.visited:hover { fill: var(--visited-hover); }
+path.region.planned { fill: var(--accent-2); }
+path.region.planned:hover { fill: color-mix(in srgb, var(--accent-2) 80%, black); }
+
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  background: var(--unvisited);
+  display: inline-block;
+}
+.legend-swatch.visited { background: var(--visited); }
+.legend-swatch.planned { background: var(--accent-2); }
 
 .sidebar {
   flex: 2;
@@ -301,6 +341,16 @@ path.region.visited:hover { fill: var(--visited-hover); }
 .place-list li.place.visited .place-name::after {
   content: " ✓";
   color: var(--visited);
+}
+.place-list li.place.planned {
+  color: color-mix(in srgb, var(--accent-2) 75%, var(--text));
+  font-weight: 700;
+  background: color-mix(in srgb, var(--accent-2) 12%, transparent);
+}
+.place-list li.place.planned .dot { background: var(--accent-2); }
+.place-list li.place.planned .place-name::after {
+  content: " ✈";
+  color: var(--accent-2);
 }
 .place-list li.hidden { display: none; }
 

@@ -4,8 +4,10 @@
   const STORAGE_KEY = "travelTrackerData";
 
   const state = {
-    countries: new Set(),
-    states: new Set(),
+    countries: new Set(), // visited
+    plannedCountries: new Set(),
+    states: new Set(), // visited
+    plannedStates: new Set(),
   };
 
   function loadStoredData() {
@@ -14,7 +16,9 @@
       if (!raw) return;
       const parsed = JSON.parse(raw);
       (parsed.countries || []).forEach((id) => state.countries.add(String(id)));
+      (parsed.plannedCountries || []).forEach((id) => state.plannedCountries.add(String(id)));
       (parsed.states || []).forEach((id) => state.states.add(String(id)));
+      (parsed.plannedStates || []).forEach((id) => state.plannedStates.add(String(id)));
     } catch (err) {
       console.warn("Could not read saved travel data:", err);
     }
@@ -25,7 +29,9 @@
       STORAGE_KEY,
       JSON.stringify({
         countries: Array.from(state.countries),
+        plannedCountries: Array.from(state.plannedCountries),
         states: Array.from(state.states),
+        plannedStates: Array.from(state.plannedStates),
       })
     );
     flashSaveNote("Saved");
@@ -57,14 +63,18 @@
   });
 
   // ---- Generic region renderer ----
+  // Each region cycles through three states on click: none -> visited -> planned -> none.
   function buildRegionMap({
     svgSelector,
     listSelector,
     searchSelector,
     countEl,
+    plannedCountEl,
     pctEl,
-    progressEl,
-    dataSet,
+    progressVisitedEl,
+    progressPlannedEl,
+    visitedSet,
+    plannedSet,
     features,
     projection,
     getId,
@@ -90,36 +100,51 @@
 
     const groups = groupOrder || Array.from(new Set(items.map((it) => it.group))).sort();
 
-    function isVisited(id) {
-      return dataSet.has(id);
+    function statusOf(id) {
+      if (visitedSet.has(id)) return "visited";
+      if (plannedSet.has(id)) return "planned";
+      return "none";
     }
 
-    function toggle(id) {
-      if (dataSet.has(id)) {
-        dataSet.delete(id);
+    function cycle(id) {
+      const status = statusOf(id);
+      if (status === "none") {
+        visitedSet.add(id);
+      } else if (status === "visited") {
+        visitedSet.delete(id);
+        plannedSet.add(id);
       } else {
-        dataSet.add(id);
+        plannedSet.delete(id);
       }
       persist();
       refresh();
     }
 
     function refresh() {
-      svg.selectAll("path.region").classed("visited", (d) => isVisited(getId(d)));
+      svg.selectAll("path.region").each(function (d) {
+        const status = statusOf(getId(d));
+        d3.select(this).classed("visited", status === "visited").classed("planned", status === "planned");
+      });
       list.querySelectorAll("li.place").forEach((li) => {
-        li.classList.toggle("visited", isVisited(li.dataset.id));
+        const status = statusOf(li.dataset.id);
+        li.classList.toggle("visited", status === "visited");
+        li.classList.toggle("planned", status === "planned");
       });
       list.querySelectorAll("li.group-header").forEach((li) => {
         const groupItems = items.filter((it) => it.group === li.dataset.group);
-        const visitedInGroup = groupItems.filter((it) => isVisited(it.id)).length;
+        const visitedInGroup = groupItems.filter((it) => statusOf(it.id) === "visited").length;
         li.querySelector(".group-count").textContent = `${visitedInGroup}/${groupItems.length}`;
       });
+
       const total = items.length;
-      const visited = items.filter((it) => isVisited(it.id)).length;
+      const visited = items.filter((it) => statusOf(it.id) === "visited").length;
+      const planned = items.filter((it) => statusOf(it.id) === "planned").length;
       const pct = total ? Math.round((visited / total) * 100) : 0;
       countEl.textContent = `${visited} / ${total}`;
+      plannedCountEl.textContent = String(planned);
       pctEl.textContent = `${pct}%`;
-      progressEl.style.width = `${pct}%`;
+      progressVisitedEl.style.width = `${total ? (visited / total) * 100 : 0}%`;
+      progressPlannedEl.style.width = `${total ? (planned / total) * 100 : 0}%`;
     }
 
     // Draw paths
@@ -130,7 +155,7 @@
       .append("path")
       .attr("class", "region")
       .attr("d", d3.geoPath(projection))
-      .on("click", (event, d) => toggle(getId(d)))
+      .on("click", (event, d) => cycle(getId(d)))
       .on("mousemove", (event, d) => {
         tooltip.hidden = false;
         tooltip.textContent = getName(d);
@@ -162,7 +187,7 @@
         li.innerHTML = it.flag
           ? `<span class="flag">${it.flag}</span><span class="place-name">${it.name}</span>`
           : `<span class="dot"></span><span class="place-name">${it.name}</span>`;
-        li.addEventListener("click", () => toggle(it.id));
+        li.addEventListener("click", () => cycle(it.id));
         frag.appendChild(li);
       });
     });
@@ -186,7 +211,7 @@
     });
 
     refresh();
-    return { refresh, items };
+    return { refresh, items, statusOf };
   }
 
   const controllers = {};
@@ -266,9 +291,12 @@
       listSelector: "world-list",
       searchSelector: "world-search",
       countEl: document.getElementById("world-count"),
+      plannedCountEl: document.getElementById("world-planned-count"),
       pctEl: document.getElementById("world-pct"),
-      progressEl: document.getElementById("world-progress"),
-      dataSet: state.countries,
+      progressVisitedEl: document.getElementById("world-progress"),
+      progressPlannedEl: document.getElementById("world-progress-planned"),
+      visitedSet: state.countries,
+      plannedSet: state.plannedCountries,
       features: geo.features,
       projection,
       getId,
@@ -288,9 +316,12 @@
       listSelector: "usa-list",
       searchSelector: "usa-search",
       countEl: document.getElementById("usa-count"),
+      plannedCountEl: document.getElementById("usa-planned-count"),
       pctEl: document.getElementById("usa-pct"),
-      progressEl: document.getElementById("usa-progress"),
-      dataSet: state.states,
+      progressVisitedEl: document.getElementById("usa-progress"),
+      progressPlannedEl: document.getElementById("usa-progress-planned"),
+      visitedSet: state.states,
+      plannedSet: state.plannedStates,
       features: geo.features,
       projection,
       getId: (d) => String(d.id),
@@ -302,18 +333,18 @@
 
   // ---- Export / Import / Reset ----
   document.getElementById("export-btn").addEventListener("click", () => {
-    const worldNames = controllers.world
-      ? controllers.world.items.filter((it) => state.countries.has(it.id)).map((it) => it.name)
-      : [];
-    const usaNames = controllers.usa
-      ? controllers.usa.items.filter((it) => state.states.has(it.id)).map((it) => it.name)
-      : [];
+    const namesOf = (controller, set) =>
+      controller ? controller.items.filter((it) => set.has(it.id)).map((it) => it.name) : [];
 
     const payload = {
       countries: Array.from(state.countries),
+      plannedCountries: Array.from(state.plannedCountries),
       states: Array.from(state.states),
-      countryNames: worldNames,
-      stateNames: usaNames,
+      plannedStates: Array.from(state.plannedStates),
+      countryNames: namesOf(controllers.world, state.countries),
+      plannedCountryNames: namesOf(controllers.world, state.plannedCountries),
+      stateNames: namesOf(controllers.usa, state.states),
+      plannedStateNames: namesOf(controllers.usa, state.plannedStates),
       exportedAt: new Date().toISOString(),
     };
 
@@ -336,7 +367,9 @@
       try {
         const parsed = JSON.parse(reader.result);
         state.countries = new Set((parsed.countries || []).map(String));
+        state.plannedCountries = new Set((parsed.plannedCountries || []).map(String));
         state.states = new Set((parsed.states || []).map(String));
+        state.plannedStates = new Set((parsed.plannedStates || []).map(String));
         persist();
         if (controllers.world) controllers.world.refresh();
         if (controllers.usa) controllers.usa.refresh();
@@ -350,9 +383,11 @@
   });
 
   document.getElementById("reset-btn").addEventListener("click", () => {
-    if (!confirm("Clear all visited countries and states?")) return;
+    if (!confirm("Clear all visited and planned countries and states?")) return;
     state.countries.clear();
+    state.plannedCountries.clear();
     state.states.clear();
+    state.plannedStates.clear();
     persist();
     if (controllers.world) controllers.world.refresh();
     if (controllers.usa) controllers.usa.refresh();
