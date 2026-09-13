@@ -38,13 +38,20 @@
 
       <div class="map-layout">
         <div class="map-wrap">
-          <svg id="world-map" viewBox="0 0 960 500" preserveAspectRatio="xMidYMid meet" aria-label="World map"></svg>
+          <div class="map-frame">
+            <svg id="world-map" viewBox="0 0 960 500" preserveAspectRatio="xMidYMid meet" aria-label="World map"></svg>
+            <div class="zoom-controls">
+              <button type="button" class="zoom-btn" data-zoom-action="in" aria-label="Zoom in">+</button>
+              <button type="button" class="zoom-btn" data-zoom-action="out" aria-label="Zoom out">−</button>
+              <button type="button" class="zoom-btn" data-zoom-action="reset" aria-label="Reset zoom">⟲</button>
+            </div>
+          </div>
           <div class="legend">
             <span class="legend-item"><span class="legend-swatch visited"></span>Visited</span>
             <span class="legend-item"><span class="legend-swatch planned"></span>Planned</span>
             <span class="legend-item"><span class="legend-swatch"></span>Not yet</span>
           </div>
-          <p class="map-hint">Click a country to cycle: not yet → visited → planned.</p>
+          <p class="map-hint">Click a country to cycle: not yet → visited → planned. Scroll, pinch, or use the buttons to zoom.</p>
         </div>
         <aside class="sidebar">
           <input type="search" id="world-search" placeholder="Search countries…" aria-label="Search countries">
@@ -72,13 +79,20 @@
 
       <div class="map-layout">
         <div class="map-wrap">
-          <svg id="usa-map" viewBox="0 0 960 600" preserveAspectRatio="xMidYMid meet" aria-label="Map of United States"></svg>
+          <div class="map-frame">
+            <svg id="usa-map" viewBox="0 0 960 600" preserveAspectRatio="xMidYMid meet" aria-label="Map of United States"></svg>
+            <div class="zoom-controls">
+              <button type="button" class="zoom-btn" data-zoom-action="in" aria-label="Zoom in">+</button>
+              <button type="button" class="zoom-btn" data-zoom-action="out" aria-label="Zoom out">−</button>
+              <button type="button" class="zoom-btn" data-zoom-action="reset" aria-label="Reset zoom">⟲</button>
+            </div>
+          </div>
           <div class="legend">
             <span class="legend-item"><span class="legend-swatch visited"></span>Visited</span>
             <span class="legend-item"><span class="legend-swatch planned"></span>Planned</span>
             <span class="legend-item"><span class="legend-swatch"></span>Not yet</span>
           </div>
-          <p class="map-hint">Click a state to cycle: not yet → visited → planned.</p>
+          <p class="map-hint">Click a state to cycle: not yet → visited → planned. Scroll, pinch, or use the buttons to zoom.</p>
         </div>
         <aside class="sidebar">
           <input type="search" id="usa-search" placeholder="Search states…" aria-label="Search states">

@@ -82,11 +82,13 @@
     getGroup,
     getFlag,
     groupOrder,
+    zoomControls,
   }) {
     const svg = d3.select(svgSelector);
     const list = document.getElementById(listSelector);
     const search = document.getElementById(searchSelector);
     const tooltip = document.getElementById("tooltip");
+    const mapG = svg.append("g").attr("class", "map-g");
 
     const items = features
       .map((f) => ({
@@ -148,7 +150,7 @@
     }
 
     // Draw paths
-    svg
+    mapG
       .selectAll("path.region")
       .data(features)
       .enter()
@@ -167,6 +169,24 @@
       })
       .append("title")
       .text((d) => getName(d));
+
+    // Zoom / pan
+    const zoom = d3
+      .zoom()
+      .scaleExtent([1, 10])
+      .on("zoom", (event) => {
+        mapG.attr("transform", event.transform);
+      });
+    svg.call(zoom).on("dblclick.zoom", null);
+
+    if (zoomControls) {
+      const zoomBy = (factor) => svg.transition().duration(200).call(zoom.scaleBy, factor);
+      zoomControls.querySelector('[data-zoom-action="in"]').addEventListener("click", () => zoomBy(1.5));
+      zoomControls.querySelector('[data-zoom-action="out"]').addEventListener("click", () => zoomBy(1 / 1.5));
+      zoomControls.querySelector('[data-zoom-action="reset"]').addEventListener("click", () => {
+        svg.transition().duration(250).call(zoom.transform, d3.zoomIdentity);
+      });
+    }
 
     // Build list, grouped
     const frag = document.createDocumentFragment();
@@ -304,6 +324,7 @@
       getGroup: (d) => (countryMeta[getId(d)] || {}).continent || "Other",
       getFlag: (d) => (countryMeta[getId(d)] || {}).flag || "",
       groupOrder: CONTINENT_ORDER,
+      zoomControls: document.querySelector("#panel-world .zoom-controls"),
     });
   }
 
@@ -328,6 +349,7 @@
       getName: (d) => d.properties.name,
       getGroup: (d) => US_REGIONS[d.properties.name] || "Other",
       groupOrder: US_REGION_ORDER,
+      zoomControls: document.querySelector("#panel-usa .zoom-controls"),
     });
   }
 

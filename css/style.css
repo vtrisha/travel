@@ -189,13 +189,46 @@ body {
   min-width: 0;
   box-shadow: var(--shadow);
 }
+.map-frame {
+  position: relative;
+}
 #world-map, #usa-map {
   width: 100%;
   height: auto;
   display: block;
   background: var(--sea);
   border-radius: 12px;
+  touch-action: none;
+  cursor: grab;
 }
+#world-map:active, #usa-map:active { cursor: grabbing; }
+
+.zoom-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.zoom-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  backdrop-filter: blur(4px);
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+.zoom-btn:hover { background: var(--surface-2); transform: translateY(-1px); }
+.zoom-btn:active { transform: translateY(0); }
 .map-hint {
   margin: 10px 0 0;
   text-align: center;
@@ -208,6 +241,7 @@ path.region {
   fill: var(--unvisited);
   stroke: var(--surface);
   stroke-width: 0.6px;
+  vector-effect: non-scaling-stroke;
   cursor: pointer;
   transition: fill 0.15s ease;
 }

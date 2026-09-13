@@ -10,6 +10,7 @@ US states map.
 - Click a region on the map, or an item in the search list, to cycle it through
   **not yet → visited (green) → planned (orange) → not yet**
 - The country list is grouped by continent and the state list by US Census region, each with a live visited-count badge
+- Zoom and pan on either map — scroll/pinch, drag, or the +/−/reset buttons in the corner
 - Live stats: counts for visited and planned, plus percentage of the world/US visited
 - Search box to quickly find and toggle a place (narrows within each group)
 - Data is saved automatically in your browser (`localStorage`)
