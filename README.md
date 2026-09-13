@@ -8,8 +8,9 @@ US states map.
 
 - Interactive world map (241 countries/territories) and US map (50 states + DC)
 - Click a region on the map, or an item in the search list, to toggle it visited
+- The country list is grouped by continent and the state list by US Census region, each with a live visited-count badge
 - Live stats: count and percentage of places visited
-- Search box to quickly find and toggle a place
+- Search box to quickly find and toggle a place (narrows within each group)
 - Data is saved automatically in your browser (`localStorage`)
 - Export your data to a JSON file for backup, or to move it to another browser/device
 - Import a previously exported JSON file
@@ -65,6 +66,7 @@ js/vendor/d3.min.js            D3.js (map projections/paths) — MIT licensed
 js/vendor/topojson-client.min.js  TopoJSON → GeoJSON conversion — ISC licensed
 data/countries-50m.json        World country boundaries (Natural Earth, via world-atlas)
 data/us-states-albers-10m.json US state boundaries (US Census, via us-atlas)
+data/country-meta.json         Continent + flag emoji per country (from world-countries), used for sidebar grouping
 ```
 
 The map data comes from the [`world-atlas`](https://github.com/topojson/world-atlas)

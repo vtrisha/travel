@@ -69,6 +69,9 @@
     projection,
     getId,
     getName,
+    getGroup,
+    getFlag,
+    groupOrder,
   }) {
     const svg = d3.select(svgSelector);
     const list = document.getElementById(listSelector);
@@ -76,8 +79,16 @@
     const tooltip = document.getElementById("tooltip");
 
     const items = features
-      .map((f) => ({ id: getId(f), name: getName(f), feature: f }))
+      .map((f) => ({
+        id: getId(f),
+        name: getName(f),
+        group: getGroup ? getGroup(f) : null,
+        flag: getFlag ? getFlag(f) : "",
+        feature: f,
+      }))
       .sort((a, b) => a.name.localeCompare(b.name));
+
+    const groups = groupOrder || Array.from(new Set(items.map((it) => it.group))).sort();
 
     function isVisited(id) {
       return dataSet.has(id);
@@ -95,8 +106,13 @@
 
     function refresh() {
       svg.selectAll("path.region").classed("visited", (d) => isVisited(getId(d)));
-      list.querySelectorAll("li").forEach((li) => {
+      list.querySelectorAll("li.place").forEach((li) => {
         li.classList.toggle("visited", isVisited(li.dataset.id));
+      });
+      list.querySelectorAll("li.group-header").forEach((li) => {
+        const groupItems = items.filter((it) => it.group === li.dataset.group);
+        const visitedInGroup = groupItems.filter((it) => isVisited(it.id)).length;
+        li.querySelector(".group-count").textContent = `${visitedInGroup}/${groupItems.length}`;
       });
       const total = items.length;
       const visited = items.filter((it) => isVisited(it.id)).length;
@@ -127,22 +143,45 @@
       .append("title")
       .text((d) => getName(d));
 
-    // Build list
+    // Build list, grouped
     const frag = document.createDocumentFragment();
-    items.forEach((it) => {
-      const li = document.createElement("li");
-      li.dataset.id = it.id;
-      li.innerHTML = `<span class="dot"></span><span>${it.name}</span>`;
-      li.addEventListener("click", () => toggle(it.id));
-      frag.appendChild(li);
+    groups.forEach((groupName) => {
+      const groupItems = items.filter((it) => it.group === groupName);
+      if (!groupItems.length) return;
+
+      const header = document.createElement("li");
+      header.className = "group-header";
+      header.dataset.group = groupName;
+      header.innerHTML = `<span>${groupName}</span><span class="group-count">0/${groupItems.length}</span>`;
+      frag.appendChild(header);
+
+      groupItems.forEach((it) => {
+        const li = document.createElement("li");
+        li.className = "place";
+        li.dataset.id = it.id;
+        li.innerHTML = it.flag
+          ? `<span class="flag">${it.flag}</span><span class="place-name">${it.name}</span>`
+          : `<span class="dot"></span><span class="place-name">${it.name}</span>`;
+        li.addEventListener("click", () => toggle(it.id));
+        frag.appendChild(li);
+      });
     });
     list.appendChild(frag);
 
     search.addEventListener("input", () => {
       const q = search.value.trim().toLowerCase();
-      list.querySelectorAll("li").forEach((li) => {
-        const name = li.textContent.toLowerCase();
+      list.querySelectorAll("li.place").forEach((li) => {
+        const name = li.querySelector(".place-name").textContent.toLowerCase();
         li.classList.toggle("hidden", q.length > 0 && !name.includes(q));
+      });
+      list.querySelectorAll("li.group-header").forEach((header) => {
+        let sibling = header.nextElementSibling;
+        let groupHasVisible = false;
+        while (sibling && sibling.classList.contains("place")) {
+          if (!sibling.classList.contains("hidden")) groupHasVisible = true;
+          sibling = sibling.nextElementSibling;
+        }
+        header.classList.toggle("hidden", !groupHasVisible);
       });
     });
 
@@ -152,9 +191,75 @@
 
   const controllers = {};
 
-  function initWorldMap(topology) {
+  const CONTINENT_ORDER = [
+    "Africa",
+    "Antarctica",
+    "Asia",
+    "Europe",
+    "North America",
+    "Oceania",
+    "South America",
+  ];
+
+  const US_REGIONS = {
+    Alabama: "South",
+    Alaska: "West",
+    Arizona: "West",
+    Arkansas: "South",
+    California: "West",
+    Colorado: "West",
+    Connecticut: "Northeast",
+    Delaware: "South",
+    "District of Columbia": "South",
+    Florida: "South",
+    Georgia: "South",
+    Hawaii: "West",
+    Idaho: "West",
+    Illinois: "Midwest",
+    Indiana: "Midwest",
+    Iowa: "Midwest",
+    Kansas: "Midwest",
+    Kentucky: "South",
+    Louisiana: "South",
+    Maine: "Northeast",
+    Maryland: "South",
+    Massachusetts: "Northeast",
+    Michigan: "Midwest",
+    Minnesota: "Midwest",
+    Mississippi: "South",
+    Missouri: "Midwest",
+    Montana: "West",
+    Nebraska: "Midwest",
+    Nevada: "West",
+    "New Hampshire": "Northeast",
+    "New Jersey": "Northeast",
+    "New Mexico": "West",
+    "New York": "Northeast",
+    "North Carolina": "South",
+    "North Dakota": "Midwest",
+    Ohio: "Midwest",
+    Oklahoma: "South",
+    Oregon: "West",
+    Pennsylvania: "Northeast",
+    "Rhode Island": "Northeast",
+    "South Carolina": "South",
+    "South Dakota": "Midwest",
+    Tennessee: "South",
+    Texas: "South",
+    Utah: "West",
+    Vermont: "Northeast",
+    Virginia: "South",
+    Washington: "West",
+    "West Virginia": "South",
+    Wisconsin: "Midwest",
+    Wyoming: "West",
+  };
+  const US_REGION_ORDER = ["Northeast", "Midwest", "South", "West"];
+
+  function initWorldMap(topology, countryMeta) {
     const geo = topojson.feature(topology, topology.objects.countries);
     const projection = d3.geoNaturalEarth1().fitSize([960, 500], geo);
+    const getId = (d) => (d.id != null ? String(d.id) : d.properties.name);
 
     controllers.world = buildRegionMap({
       svgSelector: "#world-map",
@@ -166,8 +271,11 @@
       dataSet: state.countries,
       features: geo.features,
       projection,
-      getId: (d) => String(d.id),
+      getId,
       getName: (d) => d.properties.name,
+      getGroup: (d) => (countryMeta[getId(d)] || {}).continent || "Other",
+      getFlag: (d) => (countryMeta[getId(d)] || {}).flag || "",
+      groupOrder: CONTINENT_ORDER,
     });
   }
 
@@ -187,6 +295,8 @@
       projection,
       getId: (d) => String(d.id),
       getName: (d) => d.properties.name,
+      getGroup: (d) => US_REGIONS[d.properties.name] || "Other",
+      groupOrder: US_REGION_ORDER,
     });
   }
 
@@ -254,9 +364,10 @@
   Promise.all([
     fetch("data/countries-50m.json").then((r) => r.json()),
     fetch("data/us-states-albers-10m.json").then((r) => r.json()),
+    fetch("data/country-meta.json").then((r) => r.json()),
   ])
-    .then(([worldTopo, usaTopo]) => {
-      initWorldMap(worldTopo);
+    .then(([worldTopo, usaTopo, countryMeta]) => {
+      initWorldMap(worldTopo, countryMeta);
       initUsaMap(usaTopo);
     })
     .catch((err) => {
